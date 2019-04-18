@@ -11,7 +11,7 @@
 
     <refreshfooter slot="footer">
         <view style="background:#33f111 ;height:150rpx">
-            footerafwefwfwefwef
+            footer
         </view>
     </refreshfooter>
 
