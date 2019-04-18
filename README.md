@@ -1,7 +1,7 @@
 # mini-refreshview
 [![npm](https://img.shields.io/npm/v/mini-refreshview.svg)](https://www.npmjs.com/package/mini-refreshview)  [![Package Control](https://img.shields.io/packagecontrol/dm/mini-refreshview.svg)](https://github.com/mini-plug/mini-RefreshView.git)
 ![GitHub last commit (branch)](https://img.shields.io/github/last-commit/mini-plug/mini-RefreshView/master.svg)
-
+[![Build Status](https://travis-ci.org/mini-plug/mini-RefreshView.svg?branch=master)](https://travis-ci.org/mini-plug/mini-RefreshView)
 ## 使用方法
  1.  `npm i mini-refreshview` or `yarn add mini-refreshview`
  2. 在`Page`的json文件内添加配置
