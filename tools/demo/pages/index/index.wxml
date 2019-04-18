@@ -1,0 +1,18 @@
+<!--miniprogram/pages/test/test.wxml-->
+<refreshview id="refreshView" isRefresh="{{isRefresh}}" isLoadMore='{{isLoadMore}}' enableRefresh="{{enableRefresh}}" enableLoadMore="{{enableRefresh}}" bindonRefresh="onRefresh" bindonLoadMore="onLoadMore">
+
+    <refreshheader slot="header">
+        <view style='background:#11f111;height:150rpx'>viewHeader</view>
+    </refreshheader>
+
+    <scroll-view slot="content" style='background:orange;'>
+        <view wx:for='{{data}}' wx:key='{{index}}'>{{index}}</view>
+    </scroll-view>
+
+    <refreshfooter slot="footer">
+        <view style="background:#33f111 ;height:150rpx">
+            footerafwefwfwefwef
+        </view>
+    </refreshfooter>
+
+</refreshview>

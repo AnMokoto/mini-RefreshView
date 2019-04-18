@@ -1,0 +1,55 @@
+/* components/refreshview/refreshview.wxss */
+
+.refreshview {
+  width: 100%;
+  height: auto;
+  /* display: block; */
+  overflow: visible;
+  background: transparent;
+  /* position: relative; *//* overflow-wrap: normal; *//* overflow: hidden; *//* overflow: inherit; */
+  transform-origin: 50% 50% 0;
+}
+
+.header {
+  /* z-index: 1; */
+  width: inherit;
+  height: auto;
+  position: absolute;
+  top: 0;
+}
+
+.content {
+  width: inherit;
+  height: 100%;
+  overflow: scroll;
+  /* IE 10+ */
+  -ms-overflow-style: none;
+  /* Firefox */
+  overflow: -moz-scrollbars-none;
+}
+
+.content::-webkit-scrollbar {
+  /* webkit */
+  display: none;
+}
+
+.footer {
+  width: inherit;
+  height: auto;
+  position: absolute;
+  /* top: 0; */
+}
+
+.empty {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 99;
+  background: #f3f;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: nowrap;
+}

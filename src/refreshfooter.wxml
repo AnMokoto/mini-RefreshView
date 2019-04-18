@@ -1,0 +1,4 @@
+<!--components/refreshview/refreshfooter.wxml-->
+<view id='refreshfooter'>
+    <slot>header</slot>
+</view>
