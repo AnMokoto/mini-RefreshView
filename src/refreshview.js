@@ -18,8 +18,8 @@ const View = {
 /* eslint-disable */
 Component({
   /**
-   * 组件的属性列表
-   */
+     * 组件的属性列表
+     */
   properties: {
 
     isRefresh: {
@@ -50,7 +50,7 @@ Component({
 
   relations: {
     './refreshheader': {
-      type: "child",
+      type: 'child',
       linked(target) {
         if (!this._headerTarget) {
           this._headerTarget = target
@@ -59,7 +59,7 @@ Component({
       }
     },
     './refreshfooter': {
-      type: "child",
+      type: 'child',
       linked(target) {
         if (!this._footerTarget) {
           this._footerTarget = target
@@ -70,8 +70,8 @@ Component({
   },
 
   /**
-   * 组件的初始数据
-   */
+     * 组件的初始数据
+     */
   data: {
     headerHeight: 0,
     maxHeaderHeight: 0,
@@ -85,15 +85,15 @@ Component({
     animationReset: null,
     animation: null,
     overflow: 'scroll',
-    inertia: 500
+    inertia: 16
   },
 
   /**
-   * 组件的方法列表
-   */
+     * 组件的方法列表
+     */
   methods: {
 
-    ////////////////////view
+    // //////////////////view
 
     measureHeader() {
       wx.nextTick(() => {
@@ -120,8 +120,8 @@ Component({
     },
 
     /**
-     * 调用刷新布局高度
-     */
+         * 调用刷新布局高度
+         */
     invalidate() {
       this.measureHeader()
       this.measureFooter()
@@ -135,15 +135,14 @@ Component({
           timingFunction: 'step-start'
         }),
         animationReset: wx.createAnimation({
-          duration: 200,
-          timingFunction: 'ease'
+          duration: 100,
+          timingFunction: 'ease-in-out'
         })
       })
     },
 
     invalidateContainer() {
       this.loadView('.refreshview').then((res) => {
-
         // 内容页高度
         this.loadView('#refresh-content').then((res) => {
           // 当前 content的高度
@@ -151,53 +150,55 @@ Component({
             contentBottom: res.height
           })
 
-          console.log("#refresh-content-->" + res.height)
+          console.log('#refresh-content-->' + res.height)
         })
 
         // 当前布局的高度
-        var height = res.height
+        const height = res.height
         // 屏幕显示最大高度
-        var maxHeight = wx.getSystemInfoSync().windowHeight
-        var contentHeight = Math.min(height, maxHeight)
+        const maxHeight = wx.getSystemInfoSync().windowHeight
+        const contentHeight = Math.min(height, maxHeight)
 
         this.setData({
           // reset the height
-          contentHeight: contentHeight,
+          contentHeight,
         })
 
-        console.log(".refreshview-->" + contentHeight)
+        console.log('.refreshview-->' + contentHeight)
       })
     },
 
     /**
-     * @param value 当前滑动距离
-     */
+         * @param value 当前滑动距离
+         */
     interpolatorHeader(value) {
       // 正数
       // var sym = (value >> 31)
-      var height = this.data.headerHeight + Math.abs(this._scroll)
-      // var input = Math.abs(value)
+      // 抵消
+      const height = this.data.headerHeight + Math.abs(this._scroll)
+      // var input = Math.pow(value, 0.9)
       if (value <= height) {
         return value
       }
-      return (height + Math.abs((value - height) * 0.5))
+      return (height + Math.pow((value - height), 0.65))
     },
 
     /**
-     * @param value 当前滑动距离
-     */
+         * @param value 当前滑动距离
+         */
     interpolatorFooter(value) {
       // 负数
-      var sym = (value >> 31)
+      const sym = (value >> 31)
       // 最大滑动距离
-      var height = (this.data.contentBottom - this.data.contentHeight + this.data.footerHeight) - Math.abs(this._scroll)
+      const height = (this.data.contentBottom - this.data.contentHeight + this.data.footerHeight) - Math.abs(this._scroll)
       // 当次点击事件上次滑动总距离 + 当次滑动距离
-      var input = Math.abs(value)
+      // var input = Math.pow(Math.abs(value), 0.9)
+      const input = Math.abs(value)
       // 计算
       if (input <= height) {
         return value
       }
-      var footer = (height + Math.abs((height - input) * 0.125)) * sym
+      const footer = (height + Math.pow((input - height), 0.8)) * sym
       return footer
     },
 
@@ -211,25 +212,66 @@ Component({
     },
 
     /**
-     * 惯性滑动
-     * @param offset 距离
-     * @param speed 速度
-     * @param time
-     */
-    viewInertia(offset, speed, time) {
-      var end = (offset + speed + this._scroll)
+         * 惯性滑动
+         * @param offset 距离
+         * @param time
+         */
+    viewInertia(offset, time) {
+      const abc = 16
+      if (time > 500) return // 非甩动
+      // 一帧的速度
+      let speed = (offset / time) * abc * 2
+      // if (Math.abs(speed) < this.data.inertia) return // 最低速度
+
+      const duration = 100
+
+      // 已经滚掉的
+      const scroll = offset + this._scroll
+
       // 滑动区间
-      var a = 0
-      var b = this.data.contentBottom - this.data.contentHeight
-      end = Math.min(0, Math.max(end, -b))
-      var animation = wx.createAnimation({
-        timingFunction: 'ease-out',
-        duration: time
-      }).translateY(end)
-      this.setData({
-        scroll: end,
-        animation: animation.step().export()
-      })
+      const a = 0
+      const b = this.data.contentBottom - this.data.contentHeight - Math.abs(scroll)
+      speed = Math.max(speed, -b)
+      console.log('speed--->' + speed + ' scroll---->' + scroll)
+
+      const sy = speed >= 0 ? 1 : (speed >> 31)
+
+      const glob = this
+
+
+      const dis = intertia(speed)
+      var offset = 0
+
+      this._interval = setInterval(function () {
+        if (Math.abs(offset) >= Math.abs(speed)) {
+          clearInterval(this._interval)
+          return
+        }
+        const interceptor = show(offset / speed)
+        let _scroll = (interceptor * speed) + glob.data.scroll
+        // 滚动范围
+        _scroll = Math.min(0, Math.max(_scroll, -(glob.data.contentBottom - glob.data.contentHeight)))
+        offset += dis
+        glob.setData({
+          scroll: _scroll
+        })
+      }, abc)
+
+      function intertia(speed) {
+        return Math.min(Math.abs(speed) / 32, 0.5)
+      }
+
+      /**
+             * @param input [0,1]
+             */
+      function show(input) {
+        return (1 - ((Math.cos((input + 1) * Math.PI) / 2.0) + 0.5))
+        // return ((Math.cos((input + 1) * Math.PI) / 2.0) + 0.5)
+      }
+
+      // this.setData({
+      //   scroll: end,
+      // })
     },
 
     _invalidateState() {
@@ -244,11 +286,11 @@ Component({
       }, 300)
     },
 
-    //////////////////// refresh
+    // ////////////////// refresh
 
     /**
-     * 开启刷新窗口
-     */
+         * 开启刷新窗口
+         */
     _openRefresh() {
       if (this.data.enableRefresh && this.data.headerHeight > 0) {
         this.viewRebound(this.data.headerHeight)
@@ -271,11 +313,10 @@ Component({
           this.invalidate()
         })
       }
-
     },
     /**
-     * 开启加载窗口
-     */
+         * 开启加载窗口
+         */
     _openLoadMore() {
       if (this.data.enableLoadMore && this.data.footerHeight > 0) {
         this.viewRebound(-(this.data.contentBottom - this.data.contentHeight + this.data.footerHeight))
@@ -301,12 +342,12 @@ Component({
     },
 
 
-    ///////////////////event
+    // /////////////////event
 
     onTouchStart(event) {
-      let state = this.data.state
-      if (state === REFRESH_STATE.REFRESH || state === REFRESH_STATE.LOADMORE)
-        return
+      clearInterval(this._interval)
+      const state = this.data.state
+      if (state === REFRESH_STATE.REFRESH || state === REFRESH_STATE.LOADMORE) return
       this._LastY = event.touches[0].clientY
       this._scroll = this.data.scroll
       this._startTime = Date.now()
@@ -314,12 +355,11 @@ Component({
 
     onTouchMove(event) {
       let state = this.data.state
-      if (state === REFRESH_STATE.REFRESH || state === REFRESH_STATE.LOADMORE)
-        return
+      if (state === REFRESH_STATE.REFRESH || state === REFRESH_STATE.LOADMORE) return
 
       const y = event.touches[0].clientY
       // total move distance
-      var offset = y - this._LastY
+      let offset = y - this._LastY
       state = REFRESH_STATE.DRAP_DOWN
       if (offset < 0) {
         // return // 向上滑动
@@ -329,33 +369,34 @@ Component({
         }
       } else
 
-        // var localP = this.data.scroll
-        if (offset > 0 && this.data.scroll >= 0) {
-          // 下拉刷新
-          offset = this.interpolatorHeader(offset)
-
-        } else {
-          state = REFRESH_STATE.DEFAULT
-        }
-
+      // var localP = this.data.scroll
+      if (offset > 0 && this.data.scroll >= 0) {
+        // 下拉刷新
+        offset = this.interpolatorHeader(offset)
+      } else {
+        state = REFRESH_STATE.DEFAULT
+        // var sym = offset >= 0 ? 1 : (offset >> 31)
+        // offset = Math.pow(Math.abs(offset), 0.85) * sym
+      }
 
       offset += this._scroll
+
+
       this.setData({
         scroll: offset,
-        animationY: this.data.animationY.translateY(offset)
+        // animationY: this.data.animationY.translateY(offset)
       })
     },
 
     onTouchEnd(event) {
-      let state = this.data.state
-      if (state === REFRESH_STATE.REFRESH || state === REFRESH_STATE.LOADMORE)
-        return
+      const state = this.data.state
+      if (state === REFRESH_STATE.REFRESH || state === REFRESH_STATE.LOADMORE) return
       const y = event.changedTouches[0].clientY
       // total move distance
-      var offset = y - this._LastY
+      const offset = y - this._LastY
 
-      // var sym = (offset >> 31)
-      var scroll = Math.abs(this.data.scroll)
+
+      const scroll = Math.abs(this.data.scroll)
       if (offset > 0 && this.data.scroll > 0) {
         // 下拉刷新
         if (this.data.scroll > (this.data.headerHeight >> 1)) {
@@ -364,21 +405,20 @@ Component({
           this._closeRefresh()
         }
       } else if (offset < 0 && (scroll + this.data.contentHeight) > this.data.contentBottom) {
-        var over = (this.data.contentBottom + (this.data.footerHeight >> 1))
+        const over = (this.data.contentBottom + (this.data.footerHeight >> 1))
         if ((scroll + this.data.contentHeight) > over) {
           this._openLoadMore()
         } else {
           this._closeLoadMore()
         }
       } else {
-        //drop
-        console.log("ignore")
-
-        var endTime = Date.now()
-        var time = endTime - this._startTime
-        var speed = (offset / this.data.inertia) * 100
-
-        this.viewInertia(offset, speed, time)
+        // drop
+        // var sym = offset >= 0 ? 1 : (offset >> 31)
+        // offset = Math.pow(Math.abs(offset), 0.85) * sym
+        console.log('ignore')
+        const endTime = Date.now()
+        const time = endTime - this._startTime
+        this.viewInertia(offset, time)
       }
     },
 
@@ -391,23 +431,23 @@ Component({
     },
 
     /**
-     * @param event Page dispatch event
-     */
+         * @param event Page dispatch event
+         */
     onPageScroll(event) {
-      console.log("onPageScroll--->")
+      console.log('onPageScroll--->')
       console.log(event)
     },
 
     loadViewRect(tag, target) {
-      var query = target ? target.createSelectorQuery() : wx.createSelectorQuery().in(this)
+      const query = target ? target.createSelectorQuery() : wx.createSelectorQuery().in(this)
 
-      var promise = new Promise((resolve, reject) => {
+      const promise = new Promise((resolve, reject) => {
         query.select(tag).fields({
           size: true,
           rect: true,
           scrollOffset: true,
           id: true
-        }, function(res) {
+        }, function (res) {
           resolve(res)
         }).exec()
       })
@@ -416,10 +456,10 @@ Component({
     },
 
     loadView(tag, target) {
-      var query = target ? target.createSelectorQuery() : wx.createSelectorQuery().in(this)
+      const query = target ? target.createSelectorQuery() : wx.createSelectorQuery().in(this)
 
-      var promise = new Promise((resolve, reject) => {
-        query.select(tag).boundingClientRect(function(res) {
+      const promise = new Promise((resolve, reject) => {
+        query.select(tag).boundingClientRect(function (res) {
           resolve(res)
         }).exec()
       })
@@ -430,7 +470,7 @@ Component({
 
   observers: {
     isRefresh(val) {
-      //第一次进入的在 ready里面执行
+      // 第一次进入的在 ready里面执行
       if (!val) {
         this._closeRefresh()
       }
@@ -439,7 +479,7 @@ Component({
 
     },
     isLoadMore(val) {
-      //第一次进入的在 ready里面执行
+      // 第一次进入的在 ready里面执行
       if (!val) {
         this._closeLoadMore()
       }
@@ -448,20 +488,20 @@ Component({
 
     },
     scroll(val) {
-      console.log("scrollTop---->" + val)
+      console.log('scrollTop---->' + val)
     },
 
     headerHeight(val) {
 
     },
-    animationY: function(val) {
-      wx.nextTick(() => {
-        if (this._ready) {
-          this.setData({
-            animation: val.step().export()
-          })
-        }
-      })
+    animationY(val) {
+      // wx.nextTick(() => {
+      //   if (this._ready) {
+      //     this.setData({
+      //       animation: val.step().export()
+      //     })
+      //   }
+      // })
     },
     animationReset(val) {
       wx.nextTick(() => {
@@ -483,7 +523,8 @@ Component({
     // 在组件实例被从页面节点树移除时执行
   },
 
-  created() {},
+  created() {
+  },
 
   onShow() {
 
