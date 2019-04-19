@@ -3,8 +3,10 @@
 .refreshview {
   width: 100%;
   height: auto;
+  top: 0;
   /* display: block; */
   overflow: visible;
+  position: absolute;
   background: transparent;
   /* position: relative; *//* overflow-wrap: normal; *//* overflow: hidden; *//* overflow: inherit; */
   transform-origin: 50% 50% 0;

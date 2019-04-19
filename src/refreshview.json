@@ -1,6 +1,3 @@
 {
-  "component": true,
-  "usingComponents": {
-    "refreshfooter": "./refreshfooter"
-  }
+  "component": true
 }
