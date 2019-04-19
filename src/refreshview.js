@@ -28,7 +28,7 @@ Component({
     },
     enableRefresh: {
       type: Boolean,
-      value: false
+      value: true
     },
     isLoadMore: {
       type: Boolean,
@@ -276,13 +276,13 @@ Component({
 
     _invalidateState() {
       setTimeout(() => {
+        this._ready = true
+          
         if (this.properties.isRefresh === true) {
           this._openRefresh()
         } else if (this.properties.isLoadMore === true) {
           this._openLoadMore()
         }
-
-        this._ready = true
       }, 300)
     },
 
@@ -292,7 +292,7 @@ Component({
          * 开启刷新窗口
          */
     _openRefresh() {
-      if (this.data.enableRefresh && this.data.headerHeight > 0) {
+      if (this.data.enableRefresh&& this._ready) {
         this.viewRebound(this.data.headerHeight)
         this.triggerEvent(View.REFRESH, {})
         this.setData({
@@ -318,7 +318,7 @@ Component({
          * 开启加载窗口
          */
     _openLoadMore() {
-      if (this.data.enableLoadMore && this.data.footerHeight > 0) {
+      if (this.data.enableLoadMore && this._ready) {
         this.viewRebound(-(this.data.contentBottom - this.data.contentHeight + this.data.footerHeight))
         this.triggerEvent(View.LOADMORE, {})
         this.setData({
@@ -415,7 +415,7 @@ Component({
         // drop
         // var sym = offset >= 0 ? 1 : (offset >> 31)
         // offset = Math.pow(Math.abs(offset), 0.85) * sym
-        console.log('ignore')
+        
         const endTime = Date.now()
         const time = endTime - this._startTime
         this.viewInertia(offset, time)
@@ -488,7 +488,7 @@ Component({
 
     },
     scroll(val) {
-      console.log('scrollTop---->' + val)
+      //console.log('scrollTop---->' + val)
     },
 
     headerHeight(val) {
