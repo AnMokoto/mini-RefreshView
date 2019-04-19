@@ -1,7 +1,7 @@
 {
   "usingComponents": {
-    "refreshview": "../../components/refreshview/refreshview",
-    "refreshheader": "../../components/refreshview/refreshheader",
-    "refreshfooter": "../../components/refreshview/refreshfooter"
+    "refreshview": "../../components/refreshview",
+    "refreshheader": "../../components/refreshheader",
+    "refreshfooter": "../../components/refreshfooter"
   }
 }
