@@ -123,21 +123,23 @@ Component({
     /**
      * 调用刷新布局高度
      */
-    invalidate() {
-      this.measureHeader()
-      this.measureFooter()
+    invalidate(target) {
+      var glob = target || this
+      glob.measureHeader()
+      glob.measureFooter()
       // this.invalidateContainer()
     },
 
     bindRectChange() {
       this.invalidate()
       const glob = this
+      const _invalidate = this.invalidate
       this.createIntersectionObserver({
         observeAll: false
       })
         .relativeToViewport({
           bottom: 1
-        }).observe('#refreshview', function(res) {
+        }).observe('#refreshview', function (res) {
         if (res) {
           var rect = res.relativeRect
           // 当前布局的高度
@@ -150,7 +152,7 @@ Component({
             // reset the height
             contentHeight: contentHeight,
           })
-
+          _invalidate(glob)
           console.log('.contentHeight-->' + contentHeight)
         }
       })
@@ -160,7 +162,7 @@ Component({
       })
         .relativeToViewport({
           bottom: 1
-        }).observe('#refresh-content', function(res) {
+        }).observe('#refresh-content', function (res) {
         if (res) {
           const rect = res.boundingClientRect
           glob.setData({
@@ -285,7 +287,7 @@ Component({
       const dis = intertia(speed)
       var offset = 0
 
-      this._interval = setInterval(function() {
+      this._interval = setInterval(function () {
         if (Math.abs(offset) >= Math.abs(speed)) {
           clearInterval(this._interval)
           return
@@ -510,7 +512,7 @@ Component({
             rect: true,
             scrollOffset: true,
             id: true,
-          }, function(res) {
+          }, function (res) {
             resolve(res)
           })
           .exec()
@@ -525,7 +527,7 @@ Component({
 
       const promise = new Promise((resolve, reject) => {
         query.select(tag)
-          .boundingClientRect(function(res) {
+          .boundingClientRect(function (res) {
             resolve(res)
           })
           .exec()
@@ -566,7 +568,7 @@ Component({
     // 在组件实例被从页面节点树移除时执行
   },
 
-  created() {},
+  created() { },
 
   onShow() {
 
