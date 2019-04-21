@@ -21,7 +21,10 @@ Component({
    * 组件的属性列表
    */
   properties: {
-
+    key: {
+      type: String,
+      value: '0',
+    },
     isRefresh: {
       type: Boolean,
       value: false,
@@ -36,7 +39,7 @@ Component({
     },
     enableLoadMore: {
       type: Boolean,
-      value: false,
+      value: true,
     },
     adaptive: {
       type: Boolean,
@@ -123,9 +126,57 @@ Component({
     invalidate() {
       this.measureHeader()
       this.measureFooter()
-      this.invalidateContainer()
+      // this.invalidateContainer()
     },
 
+    bindRectChange() {
+      this.invalidate()
+      const glob = this
+      this.createIntersectionObserver({
+        observeAll: false
+      })
+        .relativeToViewport({
+          bottom: 1
+        }).observe('#refreshview', function(res) {
+        if (res) {
+          var rect = res.relativeRect
+          // 当前布局的高度
+          const height = rect.bottom
+          // 屏幕显示最大高度
+          const maxHeight = wx.getSystemInfoSync().windowHeight
+          const contentHeight = Math.min(height, maxHeight)
+
+          glob.setData({
+            // reset the height
+            contentHeight: contentHeight,
+          })
+
+          console.log('.contentHeight-->' + contentHeight)
+        }
+      })
+
+      this.createIntersectionObserver({
+        observeAll: false
+      })
+        .relativeToViewport({
+          bottom: 1
+        }).observe('#refresh-content', function(res) {
+        if (res) {
+          const rect = res.boundingClientRect
+          glob.setData({
+            contentBottom: rect.height,
+            contentTop: rect.top > 0 ? rect.top : glob.data.contentTop,
+          })
+          console.log('#contentBottom-->' + rect.height)
+          console.log('#contentTop-->' + rect.top)
+        }
+      })
+    },
+
+    /**
+     * @deprecated
+     * @see [bindRectChange]
+     */
     invalidateContainer() {
       this.loadView('.refreshview')
         .then((res) => {
@@ -138,8 +189,8 @@ Component({
                 contentTop: res.top > 0 ? res.top : this.data.contentTop,
               })
 
-              console.debug('#contentBottom-->' + res.height)
-              console.debug('#contentTop-->' + res.top)
+              console.log('#contentBottom-->' + res.height)
+              console.log('#contentTop-->' + res.top)
             })
 
           // 当前布局的高度
@@ -153,7 +204,7 @@ Component({
             contentHeight: contentHeight,
           })
 
-          console.debug('.contentHeight-->' + contentHeight)
+          console.log('.contentHeight-->' + contentHeight)
         })
     },
 
@@ -164,7 +215,10 @@ Component({
       // 正数
       // var sym = (value >> 31)
       // 抵消
-      const height = this.data.headerHeight + Math.abs(this._scroll)
+      var height = Math.abs(this._scroll)
+      if (this.data.enableRefresh) {
+        height += this.data.headerHeight
+      }
       // var input = Math.pow(value, 0.9)
       if (value <= height) {
         return value
@@ -179,7 +233,10 @@ Component({
       // 负数
       const sym = (value >> 31)
       // 最大滑动距离
-      const height = (this._getMaxScroll() + this.data.footerHeight) - Math.abs(this._scroll)
+      var height = this._getMaxScroll() - Math.abs(this._scroll)
+      if (this.data.enableLoadMore) {
+        height += this.data.footerHeight
+      }
       // 当次点击事件上次滑动总距离 + 当次滑动距离
       // var input = Math.pow(Math.abs(value), 0.9)
       const input = Math.abs(value)
@@ -228,7 +285,7 @@ Component({
       const dis = intertia(speed)
       var offset = 0
 
-      this._interval = setInterval(function () {
+      this._interval = setInterval(function() {
         if (Math.abs(offset) >= Math.abs(speed)) {
           clearInterval(this._interval)
           return
@@ -261,12 +318,13 @@ Component({
     },
 
     _invalidateState() {
+      this.bindRectChange()
       setTimeout(() => {
         this._ready = true
 
-        if (this.properties.isRefresh === true) {
+        if (this.data.isRefresh === true) {
           this._openRefresh()
-        } else if (this.properties.isLoadMore === true) {
+        } else if (this.data.isLoadMore === true) {
           this._openLoadMore()
         }
       }, 300)
@@ -280,7 +338,9 @@ Component({
     _openRefresh() {
       if (this.data.enableRefresh && this._ready) {
         this.viewRebound(this.data.headerHeight)
-        this.triggerEvent(View.REFRESH, {})
+        this.triggerEvent(View.REFRESH, {
+          key: this.data.key
+        })
         this.setData({
           // isRefresh: true,
           state: REFRESH_STATE.REFRESH,
@@ -289,7 +349,7 @@ Component({
     },
 
     _closeRefresh() {
-      if (this.data.enableRefresh && this._ready) {
+      if (this._ready) {
         this.viewRebound(0)
         this.setData({
           // isRefresh: false,
@@ -306,7 +366,9 @@ Component({
     _openLoadMore() {
       if (this.data.enableLoadMore && this._ready) {
         this.viewRebound(-(this._getMaxScroll() + this.data.footerHeight))
-        this.triggerEvent(View.LOADMORE, {})
+        this.triggerEvent(View.LOADMORE, {
+          key: this.data.key
+        })
         this.setData({
           // isLoadMore: true,
           state: REFRESH_STATE.LOADMORE,
@@ -315,7 +377,7 @@ Component({
     },
 
     _closeLoadMore() {
-      if (this.data.enableLoadMore && this._ready) {
+      if (this._ready) {
         this.viewRebound(-(this._getMaxScroll()))
         this.setData({
           // isLoadMore: false,
@@ -390,18 +452,26 @@ Component({
       const scroll = Math.abs(this.data.scroll)
       if (offset > 0 && this.data.scroll > 0) {
         // 下拉刷新
+        if (!this.data.enableRefresh) {
+          this._closeRefresh()
+        } else
         if (this.data.scroll > (this.data.headerHeight >> 1)) {
           this._openRefresh()
         } else {
           this._closeRefresh()
         }
       } else if (offset < 0 && scroll >= this._getMaxScroll()) {
-        const over = (this._getMaxScroll() + (this.data.footerHeight >> 1))
-        if (scroll > over) {
-          this._openLoadMore()
-        } else {
+        if (!this.data.enableLoadMore) {
           this._closeLoadMore()
+        } else {
+          const over = (this._getMaxScroll() + (this.data.footerHeight >> 1))
+          if (scroll > over) {
+            this._openLoadMore()
+          } else {
+            this._closeLoadMore()
+          }
         }
+
       } else {
         // drop
         // var sym = offset >= 0 ? 1 : (offset >> 31)
@@ -414,7 +484,7 @@ Component({
     },
 
     onTouchCancel(event) {
-      console.debug(event)
+      console.log(event)
     },
 
     onTop(event) {
@@ -425,8 +495,8 @@ Component({
      * @param event Page dispatch event
      */
     onPageScroll(event) {
-      console.debug('onPageScroll--->')
-      console.debug(event)
+      console.log('onPageScroll--->')
+      console.log(event)
     },
 
     loadViewRect(tag, target) {
@@ -440,7 +510,7 @@ Component({
             rect: true,
             scrollOffset: true,
             id: true,
-          }, function (res) {
+          }, function(res) {
             resolve(res)
           })
           .exec()
@@ -455,7 +525,7 @@ Component({
 
       const promise = new Promise((resolve, reject) => {
         query.select(tag)
-          .boundingClientRect(function (res) {
+          .boundingClientRect(function(res) {
             resolve(res)
           })
           .exec()
@@ -487,30 +557,23 @@ Component({
     scroll(val) {
       // console.log('scrollTop---->' + val)
     },
-
-    headerHeight(val) {
-
-    },
-
   },
 
   attached() {
     // 在组件实例进入页面节点树时执行
-
   },
   detached() {
     // 在组件实例被从页面节点树移除时执行
   },
 
-  created() {
-  },
+  created() {},
 
   onShow() {
 
   },
 
   ready() {
-    this.invalidate()
+    // this.invalidate()
     this._invalidateState()
   },
 

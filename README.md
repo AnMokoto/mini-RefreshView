@@ -22,6 +22,7 @@
  3. [在布局中配置](./tools/demo/pages/index/index.wxml)
     ```xml
     <refreshview id="refreshView"
+                key="{{index}}"
                 isRefresh="{{isRefresh}}"
                 isLoadMore='{{isLoadMore}}'
                 enableRefresh="{{enableRefresh}}"
@@ -52,12 +53,13 @@
     
         字段名|类型|必填|描述
         :----:|:----:|:----:|:----:
+        key|String|否|布局标记
         isRefresh|Boolean|否|控制刷新状态
         isLoadMore|Boolean|否|控制加载状态
         enableRefresh|Boolean|否|是否开启刷新
         enableLoadMore|Boolean|否|是否开启加载
-        bindonRefresh|Function|否|刷新状态回调
-        bindonLoadMore|Function|否|加载状态回调
+        bindonRefresh|Function|否|刷新状态回调({key})
+        bindonLoadMore|Function|否|加载状态回调({key})
     
     * `slot`
     
