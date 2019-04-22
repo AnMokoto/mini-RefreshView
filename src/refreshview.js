@@ -143,7 +143,7 @@ Component({
                   bottom: 1
               }).observe('#refreshview', function (res) {
                 if (res) {
-                    console.log(res)
+                    // console.log(res)
                     var rect = res.relativeRect
                     var bound = res.boundingClientRect
                     // 当前布局的高度
