@@ -1,12 +1,12 @@
 <!--components/refreshview/refreshview.wxml-->
 <!-- 不使用wx.Animation,恢复时scroll被替换 -->
-<view class='refreshview' id='refreshview' bindtouchstart='onTouchStart' bindtouchmove='onTouchMove' bindtouchend='onTouchEnd' bindtouchcancel='onTouchCancel' style='top:{{scroll}}px'>
+<view class='refreshview' id='refreshview' bindtouchstart='onTouchStart' bindtouchmove='onTouchMove' bindtouchend='onTouchEnd' bindtouchcancel='onTouchCancel' style='top:{{scroll}}px;'>
 
   <view wx:if='{{enableRefresh}}' class='header' style='top:-{{headerHeight}}px'>
     <slot name='header'>header</slot>
   </view>
 
-  <view id='refresh-content' class='content'>
+  <view id='refresh-content' class='content' style='height:{{contentHeightPx}}px'>
     <slot name="content">refresh-content</slot>
   </view>
   <view wx:if='{{enableLoadMore}}' class='footer' style="top:{{contentBottom}}px;display:{{contentBottom===0?'none':'bloack'}}">
